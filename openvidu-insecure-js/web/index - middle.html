@@ -1,0 +1,196 @@
+<html>
+
+<head>
+	<title>openvidu-insecure-js</title>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1" charset="utf-8">
+	<link rel="shortcut icon" href="resources/images/favicon.ico" type="image/x-icon">
+
+	<!-- Bootstrap -->
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<!-- Bootstrap -->
+
+	<link rel="stylesheet" href="style.css" type="text/css" media="screen">
+	<script src="openvidu-browser-2.17.0.js"></script>
+	<script src="app.js"></script>
+	<style type="text/css">
+		canvas{ 
+			border: 1px solid black;
+		};
+	</style>
+</head>
+
+<body>
+
+	<nav class="navbar navbar-default">
+		<div class="container">
+			<div class="navbar-header">
+				<a class="navbar-brand" href="/"><img class="demo-logo" src="resources/images/openvidu_vert_white_bg_trans_cropped.png"/> Insecure JS</a>
+				<a class="navbar-brand nav-icon" href="https://github.com/OpenVidu/openvidu-tutorials/tree/master/openvidu-insecure-js" title="GitHub Repository" target="_blank"><i class="fa fa-github" aria-hidden="true"></i></a>
+				<a class="navbar-brand nav-icon" href="http://www.docs.openvidu.io/en/stable/tutorials/openvidu-insecure-js/" title="Documentation" target="_blank"><i class="fa fa-book" aria-hidden="true"></i></a>
+			</div>
+		</div>
+	</nav>
+
+	<div id="main-container" class="container">
+		<div id="join">
+			<div id="img-div"><img src="resources/images/openvidu_grey_bg_transp_cropped.png" /></div>
+			<div id="join-dialog" class="jumbotron vertical-center">
+				<h1>Join a video session</h1>
+				<form class="form-group" onsubmit="joinSession(); return false">
+					<p>
+						<label>Participant</label>
+						<input class="form-control" type="text" id="userName" required>
+					</p>
+					<p>
+						<label>Session</label>
+						<input class="form-control" type="text" id="sessionId" required>
+					</p>
+					<p class="text-center">
+						<input class="btn btn-lg btn-success" type="submit" name="commit" value="Join!">
+					</p>
+				</form>
+			</div>
+		</div>
+
+		<div id="session" style="display: none;">
+			<div id="session-header">
+				<h1 id="session-title"></h1>
+				<input class="btn btn-large btn-danger" type="button" id="buttonLeaveSession" onmouseup="leaveSession()" value="Leave session">
+			</div>
+			<div class="col-md-6">
+				<div id="main-video" style="position:relative; border:blue solid 1px;">
+					<p></p>
+					<video autoplay playsinline="true"></video>
+					
+					<div style="position:absolute; top:0; left:0; z-index:10; border:red solid 1px; width:100%; height:100%" id="divC">
+						<canvas id="c"></canvas>
+					</div>
+				</div>
+				<button type="button" class="btn btn-primary btn-sm" id="addBox">add box</button>
+			</div>
+			
+			<div id="video-container" class="col-md-6"></div>
+		</div>
+	</div>
+
+	<footer class="footer">
+		<div class="container">
+			<div class="text-muted">OpenVidu © 2017</div>
+			<a href="http://www.openvidu.io/" target="_blank"><img class="openvidu-logo" src="resources/images/openvidu_globe_bg_transp_cropped.png"/></a>
+		</div>
+	</footer>
+<script type="module">
+
+var pos = {
+	drawable:false,
+	x: -1,
+	y: -1
+};
+
+var canvas, ctx;
+
+
+//main();
+$(document).ready(function(){
+
+	console.log("==== ready");
+
+
+	canvas = document.getElementById("c");
+	//canvas.width = $("#main-video").css("width");
+	//canvas.height = $("#main-video").css("height");
+
+	ctx = canvas.getContext("2d");
+
+	console.log(canvas);
+
+	canvas.addEventListener("mousedown", listener);
+	canvas.addEventListener("mousemove", listener);
+	canvas.addEventListener("mouseup", listener);
+	canvas.addEventListener("mouseout", listener);
+});
+
+
+
+
+function listener(event){
+
+	console.log("==== listener");
+
+	switch(event.type){
+		case "mousedown":
+			initDraw(event);
+			break;
+
+		case "mousemove":
+			if(pos.drawable)
+				draw(event);
+			break;
+
+		case "mouseout":
+		case "mouseup":
+			finishDraw();
+			break;
+	}
+}
+
+function initDraw(event){
+	console.log("==== initDraw");
+	ctx.beginPath();
+	pos.drawable = true;
+	var coors = getPosition(event);
+	pos.X = coors.X;
+	pos.Y = coors.Y;
+	console.log(coors);
+	console.log(pos.X+"/"+pos.Y);
+	ctx.moveTo(pos.X, pos.Y);
+}
+
+function draw(event){
+	var coors = getPosition(event);
+	ctx.lineTo(coors.X, coors.Y);
+	pos.X = coors.X;
+	pos.Y = coors.Y;
+	ctx.stroke();
+	console.log("==== draw4");
+}
+
+function finishDraw(){
+	pos.drawable = false;
+	pos.X = -1;
+	pos.Y = -1;
+}
+
+function getPosition(event){
+	console.log("==== getPosition");
+	console.log(event.pageX+"/"+canvas.offsetLeft);
+	console.log(event.pageY+"/"+canvas.offsetTop);
+	var x = event.pageX - canvas.offsetLeft;
+	var y = event.pageY - canvas.offsetTop;
+	return {X: x, Y: y};
+}
+
+
+/*
+function draw(canvas){
+	var ctx = canvs.getContext("2d");
+	ctx.moveTo(30,100);
+	ctx.lineTo(80,100);
+	ctx.stroke();
+}
+*/
+
+/*
+$('#addBox').click( function() {
+  console.log("addBox click");
+  main();
+} );
+*/
+</script>
+</body>
+
+</html>

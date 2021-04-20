@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1" charset="utf-8">
+	<link rel="shortcut icon" href="./images/favicon.ico" type="image/x-icon">
+
+	<!-- Bootstrap -->
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<!-- Bootstrap -->
+
+	<link rel="stylesheet" href="style.css" type="text/css" media="screen">
+	<script src="openvidu-browser-2.17.0.js"></script>
+	<script src="app.js"></script>
+
+    <title>Canvas Painter</title>
+    <style type="text/css">
+        canvas{
+            border: 1px solid black
+        };
+    </style>
+</head>
+<body>
+
+    <input class="form-control" type="text" id="userName" required>
+    <input class="form-control" type="text" id="sessionId" required>
+
+    <div class="col-md-6">
+        <canvas id="canvas" width="500" height="500">
+
+        </canvas>
+    </div>
+<script>
+
+var pos = {
+	drawable:false,
+	x: -1,
+	y: -1
+};
+
+var canvas, ctx;
+
+window.onload = function(){
+	console.log("==== ready");
+
+
+	canvas = document.getElementById("canvas");
+	//canvas.width = $("#main-video").css("width");
+	//canvas.height = $("#main-video").css("height");
+
+	ctx = canvas.getContext("2d");
+
+	console.log(canvas);
+
+	canvas.addEventListener("mousedown", listener);
+	canvas.addEventListener("mousemove", listener);
+	canvas.addEventListener("mouseup", listener);
+	canvas.addEventListener("mouseout", listener);
+}
+
+function draw(canvas){
+    var ctx = canvas.getContext("2d");
+    ctx.moveTo(30, 100);
+    ctx.lineTo(80, 100);
+    ctx.stroke();
+}
+
+
+
+function listener(event){
+
+	console.log("==== listener");
+
+	switch(event.type){
+		case "mousedown":
+			initDraw(event);
+			break;
+
+		case "mousemove":
+			if(pos.drawable)
+				draw(event);
+			break;
+
+		case "mouseout":
+		case "mouseup":
+			finishDraw();
+			break;
+	}
+}
+
+function initDraw(event){
+	console.log("==== initDraw");
+	ctx.beginPath();
+	pos.drawable = true;
+	var coors = getPosition(event);
+	pos.X = coors.X;
+	pos.Y = coors.Y;
+	console.log(coors);
+	console.log(pos.X+"/"+pos.Y);
+	ctx.moveTo(pos.X, pos.Y);
+}
+
+function draw(event){
+	var coors = getPosition(event);
+	ctx.lineTo(coors.X, coors.Y);
+	pos.X = coors.X;
+	pos.Y = coors.Y;
+	ctx.stroke();
+	console.log("==== draw4");
+}
+
+function finishDraw(){
+	pos.drawable = false;
+	pos.X = -1;
+	pos.Y = -1;
+}
+
+function getPosition(event){
+	console.log("==== getPosition");
+	console.log(event.pageX+"/"+canvas.offsetLeft);
+	console.log(event.pageY+"/"+canvas.offsetTop);
+	var x = event.pageX - canvas.offsetLeft;
+	var y = event.pageY - canvas.offsetTop;
+	return {X: x, Y: y};
+}
+
+</script>
+</body>
+</html>
